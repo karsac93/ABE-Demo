@@ -1,6 +1,12 @@
 <resources>
-    <string name="app_name">TFLiteObjectDetection</string>
+    <string name="app_name">ABE-Demo</string>
     <string name="description_info">Info</string>
     <string name="request_permission">This sample needs camera permission.</string>
     <string name="camera_error">This device doesn\'t support Camera2 API.</string>
+
+    <string-array name="messages_drop">
+        <item>My msgs</item>
+        <item>Received msgs</item>
+        <item>Intermediate msgs</item>
+    </string-array>
 </resources>

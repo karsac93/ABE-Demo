@@ -2,4 +2,8 @@
 <resources>
     <dimen name="bottom_sheet_corner_radius">15dp</dimen>
     <dimen name="bottom_sheet_top_padding">8dp</dimen>
+    <dimen name="thumbnail">90dp</dimen>
+    <dimen name="thumbnail_margin">16dp</dimen>
+    <dimen name="ic_delete">30dp</dimen>
+    <dimen name="item_offset">10dp</dimen>
 </resources>

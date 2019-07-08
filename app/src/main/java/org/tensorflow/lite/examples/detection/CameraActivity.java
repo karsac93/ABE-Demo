@@ -64,7 +64,6 @@ public abstract class CameraActivity extends AppCompatActivity
         View.OnClickListener {
   private static final Logger LOGGER = new Logger();
 
-  private static final int PERMISSIONS_REQUEST = 1;
 
   protected int previewWidth = 0;
   protected int previewHeight = 0;
@@ -92,8 +91,7 @@ public abstract class CameraActivity extends AppCompatActivity
   //Modified to add switch to provide a handle to save objects
   public static boolean saveObjects = false;
   private Switch save_objects_stch;
-  private String[] permissions = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                Manifest.permission.CAMERA};
+
 
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
@@ -105,12 +103,6 @@ public abstract class CameraActivity extends AppCompatActivity
     Toolbar toolbar = findViewById(R.id.toolbar);
     setSupportActionBar(toolbar);
     getSupportActionBar().setDisplayShowTitleEnabled(false);
-
-    if (hasPermission()) {
-      setFragment();
-    } else {
-      requestPermission();
-    }
 
     threadsTextView = findViewById(R.id.threads);
     plusImageView = findViewById(R.id.plus);
@@ -361,37 +353,7 @@ public abstract class CameraActivity extends AppCompatActivity
     }
   }
 
-  @Override
-  public void onRequestPermissionsResult(
-      final int requestCode, final String[] permissions, final int[] grantResults) {
-    if (requestCode == PERMISSIONS_REQUEST) {
-      if (grantResults.length > 0
-          && grantResults[0] == PackageManager.PERMISSION_GRANTED
-          && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-        setFragment();
-      } else {
-        requestPermission();
-      }
-    }
-  }
 
-  private boolean hasPermission() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        for(String permission : permissions){
-            if(ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED)
-                return false;
-        }
-        return true;
-    } else {
-      return true;
-    }
-  }
-
-  private void requestPermission() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      ActivityCompat.requestPermissions(this, permissions, PERMISSIONS_REQUEST);
-    }
-  }
 
   // Returns true if the device supports the required hardware level, or better.
   private boolean isHardwareLevelSupported(

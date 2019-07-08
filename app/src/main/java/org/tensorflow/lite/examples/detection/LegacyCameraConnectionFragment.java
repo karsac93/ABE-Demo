@@ -51,7 +51,7 @@ public class LegacyCameraConnectionFragment extends Fragment {
   private Camera camera;
   private Camera.PreviewCallback imageListener;
   private Size desiredSize;
-  /** The layout identifier to inflate for this Fragment. */
+  /** The msg_menu identifier to inflate for this Fragment. */
   private int layout;
   /** An {@link AutoFitTextureView} for camera preview. */
   private AutoFitTextureView textureView;

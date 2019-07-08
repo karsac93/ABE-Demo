@@ -90,8 +90,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   @Override
   public void onPreviewSizeChosen(final Size size, final int rotation) {
     final float textSizePx =
-        TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DIP, getResources().getDisplayMetrics());
+            TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DIP, getResources().getDisplayMetrics());
     borderedText = new BorderedText(textSizePx);
     borderedText.setTypeface(Typeface.MONOSPACE);
 
@@ -101,19 +101,19 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     try {
       detector =
-          TFLiteObjectDetectionAPIModel.create(
-              getAssets(),
-              TF_OD_API_MODEL_FILE,
-              TF_OD_API_LABELS_FILE,
-              TF_OD_API_INPUT_SIZE,
-              TF_OD_API_IS_QUANTIZED);
+              TFLiteObjectDetectionAPIModel.create(
+                      getAssets(),
+                      TF_OD_API_MODEL_FILE,
+                      TF_OD_API_LABELS_FILE,
+                      TF_OD_API_INPUT_SIZE,
+                      TF_OD_API_IS_QUANTIZED);
       cropSize = TF_OD_API_INPUT_SIZE;
     } catch (final IOException e) {
       e.printStackTrace();
       LOGGER.e("Exception initializing classifier!", e);
       Toast toast =
-          Toast.makeText(
-              getApplicationContext(), "Classifier could not be initialized", Toast.LENGTH_SHORT);
+              Toast.makeText(
+                      getApplicationContext(), "Classifier could not be initialized", Toast.LENGTH_SHORT);
       toast.show();
       finish();
     }
@@ -129,25 +129,25 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Config.ARGB_8888);
 
     frameToCropTransform =
-        ImageUtils.getTransformationMatrix(
-            previewWidth, previewHeight,
-            cropSize, cropSize,
-            sensorOrientation, MAINTAIN_ASPECT);
+            ImageUtils.getTransformationMatrix(
+                    previewWidth, previewHeight,
+                    cropSize, cropSize,
+                    sensorOrientation, MAINTAIN_ASPECT);
 
     cropToFrameTransform = new Matrix();
     frameToCropTransform.invert(cropToFrameTransform);
 
     trackingOverlay = (OverlayView) findViewById(R.id.tracking_overlay);
     trackingOverlay.addCallback(
-        new DrawCallback() {
-          @Override
-          public void drawCallback(final Canvas canvas) {
-            tracker.draw(canvas);
-            if (isDebug()) {
-              tracker.drawDebug(canvas);
-            }
-          }
-        });
+            new DrawCallback() {
+              @Override
+              public void drawCallback(final Canvas canvas) {
+                tracker.draw(canvas);
+                if (isDebug()) {
+                  tracker.drawDebug(canvas);
+                }
+              }
+            });
   }
 
   @Override
@@ -156,12 +156,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     final long currTimestamp = timestamp;
     byte[] originalLuminance = getLuminance();
     tracker.onFrame(
-        previewWidth,
-        previewHeight,
-        getLuminanceStride(),
-        sensorOrientation,
-        originalLuminance,
-        timestamp);
+            previewWidth,
+            previewHeight,
+            getLuminanceStride(),
+            sensorOrientation,
+            originalLuminance,
+            timestamp);
     trackingOverlay.postInvalidate();
 
     // No mutex needed as this method is not reentrant.
@@ -188,70 +188,70 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     }
 
     runInBackground(
-        new Runnable() {
-          @Override
-          public void run() {
-            LOGGER.i("Running detection on image " + currTimestamp);
-            final long startTime = SystemClock.uptimeMillis();
-            final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
-            lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+            new Runnable() {
+              @Override
+              public void run() {
+                LOGGER.i("Running detection on image " + currTimestamp);
+                final long startTime = SystemClock.uptimeMillis();
+                final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
+                lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
-            cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
-            final Canvas canvas = new Canvas(cropCopyBitmap);
-            final Paint paint = new Paint();
-            paint.setColor(Color.RED);
-            paint.setStyle(Style.STROKE);
-            paint.setStrokeWidth(2.0f);
+                cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
+                final Canvas canvas = new Canvas(cropCopyBitmap);
+                final Paint paint = new Paint();
+                paint.setColor(Color.RED);
+                paint.setStyle(Style.STROKE);
+                paint.setStrokeWidth(2.0f);
 
-            float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-            switch (MODE) {
-              case TF_OD_API:
-                minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-                break;
-            }
-
-            final List<Classifier.Recognition> mappedRecognitions =
-                new LinkedList<Classifier.Recognition>();
-
-            for (final Classifier.Recognition result : results) {
-              final RectF location = result.getLocation();
-              if (location != null && result.getConfidence() >= minimumConfidence) {
-                canvas.drawRect(location, paint);
-                  Log.d(DetectorActivity.class.getCanonicalName(), "Detected object:" + result.getTitle());
-                /**
-                 * My Own code here, just to save the detected objects in the memory
-                 */
-                if(saveObjects && result.getTitle().equalsIgnoreCase("soldier")){
-                    Rect coor = new Rect();
-                    location.round(coor);
-                    Log.d(DetectorActivity.class.getCanonicalName(), coor.left + " " + coor.top + " " +
-                            coor.width() + " " + coor.height() + " " + croppedBitmap.getWidth() + " " + croppedBitmap.getHeight());
-                    Log.d(DetectorActivity.class.getCanonicalName(), "User decided to save the object");
-                    Runnable saveRunnable = new SaveRunnable(croppedBitmap, coor);
-                    Thread thread = new Thread(saveRunnable);
-                    thread.start();
+                float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+                switch (MODE) {
+                  case TF_OD_API:
+                    minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+                    break;
                 }
-                cropToFrameTransform.mapRect(location);
-                result.setLocation(location);
-                mappedRecognitions.add(result);
-              }
-            }
-            tracker.trackResults(mappedRecognitions, luminanceCopy, currTimestamp);
-            trackingOverlay.postInvalidate();
 
-            computingDetection = false;
+                final List<Classifier.Recognition> mappedRecognitions =
+                        new LinkedList<Classifier.Recognition>();
 
-            runOnUiThread(
-                new Runnable() {
-                  @Override
-                  public void run() {
-                    showFrameInfo(previewWidth + "x" + previewHeight);
-                    showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
-                    showInference(lastProcessingTimeMs + "ms");
+                for (final Classifier.Recognition result : results) {
+                  final RectF location = result.getLocation();
+                  if (location != null && result.getConfidence() >= minimumConfidence) {
+                    canvas.drawRect(location, paint);
+                    Log.d(DetectorActivity.class.getCanonicalName(), "Detected object:" + result.getTitle());
+                    /**
+                     * My Own code here, just to save the detected objects in the memory
+                     */
+                    if(saveObjects && result.getTitle().equalsIgnoreCase("soldier")){
+                      Rect coor = new Rect();
+                      location.round(coor);
+                      Log.d(DetectorActivity.class.getCanonicalName(), coor.left + " " + coor.top + " " +
+                              coor.width() + " " + coor.height() + " " + croppedBitmap.getWidth() + " " + croppedBitmap.getHeight());
+                      Log.d(DetectorActivity.class.getCanonicalName(), "User decided to save the object");
+                      Runnable saveRunnable = new SaveRunnable(croppedBitmap, coor);
+                      Thread thread = new Thread(saveRunnable);
+                      thread.start();
+                    }
+                    cropToFrameTransform.mapRect(location);
+                    result.setLocation(location);
+                    mappedRecognitions.add(result);
                   }
-                });
-          }
-        });
+                }
+                tracker.trackResults(mappedRecognitions, luminanceCopy, currTimestamp);
+                trackingOverlay.postInvalidate();
+
+                computingDetection = false;
+
+                runOnUiThread(
+                        new Runnable() {
+                          @Override
+                          public void run() {
+                            showFrameInfo(previewWidth + "x" + previewHeight);
+                            showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
+                            showInference(lastProcessingTimeMs + "ms");
+                          }
+                        });
+              }
+            });
   }
 
   @Override

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <RelativeLayout
+    android:id="@+id/view_background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary">
+
+    <ImageView
+        android:id="@+id/delete_icon"
+        android:layout_width="@dimen/ic_delete"
+        android:layout_height="@dimen/ic_delete"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="@dimen/item_offset"
+        android:src="@drawable/baseline_delete_white_18dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="@dimen/item_offset"
+        android:layout_toLeftOf="@id/delete_icon"
+        android:text="Delete"
+        android:textColor="@android:color/white"
+        android:textSize="13dp"/>
+</RelativeLayout>
+
+
+<RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/rel_touch"
+        android:background="@android:color/white"
+        android:padding="10dp">
+
+        <RelativeLayout
+
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/thumbnail"
+                android:layout_width="@dimen/thumbnail"
+                android:layout_height="@dimen/thumbnail"
+                android:layout_marginRight="@dimen/thumbnail_margin"
+                android:scaleType="centerCrop"/>
+
+            <TextView
+                android:id="@+id/filename"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/thumbnail"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="2"
+                android:textColor="@color/colorPrimary"
+                android:textSize="17sp" />
+
+            <TextView
+            android:id="@+id/status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/filename"
+            android:layout_marginTop="5dp"
+            android:layout_toRightOf="@id/thumbnail"
+            android:textColor="@color/colorPrimary"
+            android:textSize="17sp" />
+
+        </RelativeLayout>
+    </RelativeLayout>
+
+</FrameLayout>
