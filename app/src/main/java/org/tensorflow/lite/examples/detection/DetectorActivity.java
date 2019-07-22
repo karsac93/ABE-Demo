@@ -59,7 +59,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/labelmap.txt";
   private static final DetectorMode MODE = DetectorMode.TF_OD_API;
   // Minimum detection confidence to track a detection.
-  private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.75f;
+  private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.96f;
   private static final boolean MAINTAIN_ASPECT = false;
   private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
   private static final boolean SAVE_PREVIEW_BITMAP = false;
@@ -215,13 +215,16 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                 for (final Classifier.Recognition result : results) {
                   final RectF location = result.getLocation();
-                  if (location != null && result.getConfidence() >= minimumConfidence) {
+                  LOGGER.d("checking the status of the switch:" + saveObjects);
+                  if (location != null && result.getConfidence() >= minimumConfidence && result.getTitle().contains("soldier")) {
                     canvas.drawRect(location, paint);
                     Log.d(DetectorActivity.class.getCanonicalName(), "Detected object:" + result.getTitle());
                     /**
                      * My Own code here, just to save the detected objects in the memory
                      */
-                    if(saveObjects && result.getTitle().equalsIgnoreCase("soldier")){
+                    Log.d("Hello", "save outside");
+                    if(saveObjects && result.getTitle().contains("soldier")){
+                      Log.d("Hello", "save");
                       Rect coor = new Rect();
                       location.round(coor);
                       Log.d(DetectorActivity.class.getCanonicalName(), coor.left + " " + coor.top + " " +

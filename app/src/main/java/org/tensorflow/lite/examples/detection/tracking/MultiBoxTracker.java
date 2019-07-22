@@ -133,7 +133,7 @@ public class MultiBoxTracker {
 
       final RectF trackedPos = trackedObject.getTrackedPositionInPreviewFrame();
 
-      if (getFrameToCanvasMatrix().mapRect(trackedPos)) {
+      if (getFrameToCanvasMatrix().mapRect(trackedPos) && recognition.title.contains("soldier")) {
         final String labelString = String.format("%.2f", trackedObject.getCurrentCorrelation());
         borderedText.drawText(canvas, trackedPos.right, trackedPos.bottom, labelString);
       }

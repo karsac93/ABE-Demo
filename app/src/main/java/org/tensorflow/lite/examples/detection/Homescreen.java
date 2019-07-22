@@ -18,6 +18,7 @@ import org.tensorflow.lite.examples.detection.NearbySupport.NearbyService;
 import org.tensorflow.lite.examples.detection.SharedPreferences.SharedPreferenceHandler;
 
 import java.io.File;
+import java.util.List;
 
 import org.tensorflow.lite.examples.detection.SQLHandler.AppDatabase;
 import org.tensorflow.lite.examples.detection.SQLHandler.Msg;
@@ -89,6 +90,8 @@ public class Homescreen extends AppCompatActivity {
             Intent intent = new Intent(Homescreen.this, NearbyService.class);
             stopService(intent);
         });
+
+
     }
 
     @Override

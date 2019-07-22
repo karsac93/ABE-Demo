@@ -24,6 +24,7 @@ import com.google.android.gms.nearby.connection.Payload;
 import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 import com.google.android.gms.nearby.connection.Strategy;
+import com.google.android.gms.tasks.OnFailureListener;
 
 import org.tensorflow.lite.examples.detection.Homescreen;
 import org.tensorflow.lite.examples.detection.SDFileHandler;
@@ -92,8 +93,19 @@ public class NearbyService extends Service {
     }
 
     private void startDiscovery() {
+        connectionsClient.stopDiscovery();
         connectionsClient.startDiscovery(getPackageName(), endpointDiscoveryCallback,
-                new DiscoveryOptions.Builder().setStrategy(STRATEGY).build());
+                new DiscoveryOptions.Builder().setStrategy(STRATEGY).build()).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                e.printStackTrace();
+                connectionsClient.stopDiscovery();
+                connectionsClient.stopAdvertising();
+                connectionsClient.stopAllEndpoints();
+                startAdvertising();
+                startDiscovery();
+            }
+        });
     }
 
     private final EndpointDiscoveryCallback endpointDiscoveryCallback = new EndpointDiscoveryCallback() {
@@ -102,14 +114,24 @@ public class NearbyService extends Service {
             Log.d(TAG, "Endpoint found:" + endpointID + " " + discoveredEndpointInfo.getServiceId());
             if (!endpointID.equals(lastConnected)) {
                 Log.d(TAG, "Start connection:");
-                Random r = new Random();
-                int rand = r.nextInt(5000) + 1000;
+                int start = rand.nextInt(5000) + 1000;
                 try {
-                    Thread.sleep(rand);
+                    Thread.sleep(start);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                connectionsClient.requestConnection(id, endpointID, connectionLifecycleCallback);
+                connectionsClient.stopDiscovery();
+                connectionsClient.stopAdvertising();
+                connectionsClient.requestConnection(id, endpointID, connectionLifecycleCallback)
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        connectionsClient.stopDiscovery();
+                        connectionsClient.stopAdvertising();
+                        startAdvertising();
+                        startDiscovery();
+                    }
+                });
             }
         }
 
@@ -117,6 +139,8 @@ public class NearbyService extends Service {
         public void onEndpointLost(@NonNull String endpointID) {
             Log.d(TAG, "Just found and lost the endpoint:" + endpointID);
             connectionsClient.stopAllEndpoints();
+            connectionsClient.stopDiscovery();
+            connectionsClient.stopAdvertising();
             transmitted = false;
             Toast.makeText(NearbyService.this, "Searching and discovering nearby devices!",
                     Toast.LENGTH_SHORT).show();
@@ -127,7 +151,7 @@ public class NearbyService extends Service {
 
 
     private void startAdvertising() {
-
+        connectionsClient.stopAdvertising();
         connectionsClient.startAdvertising(id, getPackageName(), connectionLifecycleCallback,
                 new AdvertisingOptions.Builder().setStrategy(STRATEGY).build());
     }
@@ -197,6 +221,7 @@ public class NearbyService extends Service {
                     }
                     if (payload.getType() == Payload.Type.STREAM) {
                         try {
+                            //InputStream in = payload.asStream().asInputStream();
                             InputStream in = payload.asStream().asInputStream();
                             ObjectInputStream oin = new ObjectInputStream(in);
                             obj = (TransferPOJO) oin.readObject();
@@ -325,6 +350,7 @@ public class NearbyService extends Service {
                 if (msg.getType().equals(Homescreen.OWN)) {
                     String devices = id+ ", " + connectedId;
                     String[] result = hashManagement(devices, null).split("/");
+                    Log.d(TAG, msg.getId());
                     msg.setHashInfo(result[0] + "-" + devices);
                     msg.setNextHash(result[1]);
                     msg.setConnectedDevices(connectedId);
@@ -386,6 +412,7 @@ public class NearbyService extends Service {
             List<KeyChainHash> keyChain = database.dao().getChainHash(SetupActivity.OWN);
             currHash = keyChain.get(num).getK5();
             Log.d(TAG, "k5:" + keyChain.get(num).getK5() + " " + "k0:" + keyChain.get(num).getK0());
+            Log.d(TAG, "-----------------");
         }
         String result = shaHash(currHash + devices);
         String nextHash = shaHash(currHash);
