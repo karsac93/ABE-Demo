@@ -45,7 +45,10 @@ public class SetupActivity extends AppCompatActivity {
     private RadioButton btn;
     public static final String STATUS = "setup", ID = "id";
     public static final String TYPE = "type", DS = "Disaster", AR = "Battlefield", IN = "IN";
+
+    public static final String IP = "10.106.41.137";
     private static final int ARPORT = 5001, DSPORT = 5002;
+
     private String[] permissions = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.CAMERA, Manifest.permission.BLUETOOTH,
             Manifest.permission.BLUETOOTH_ADMIN,
@@ -54,7 +57,6 @@ public class SetupActivity extends AppCompatActivity {
             Manifest.permission.ACCESS_COARSE_LOCATION,};
     private static final int PERMISSIONS_REQUEST = 1;
     public static final String TAG = SetupActivity.class.getCanonicalName();
-    public static final String IP = "10.106.41.137";
     public static final String DIR = "/ABE/", PUB = "pubkey", PRV = "prvkey", CPH = ".cpabe",
             ATTR = "attrs", OWN = "own", OTHER = "other";
     String id = "IN";

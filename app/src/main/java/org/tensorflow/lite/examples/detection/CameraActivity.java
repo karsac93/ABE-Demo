@@ -85,13 +85,15 @@ public abstract class CameraActivity extends AppCompatActivity
   private BottomSheetBehavior sheetBehavior;
 
   protected TextView frameValueTextView, cropValueTextView, inferenceTimeTextView;
+  Button saveBtn;
   protected ImageView bottomSheetArrowImageView;
   private ImageView plusImageView, minusImageView;
   private SwitchCompat apiSwitchCompat;
   private TextView threadsTextView;
 
   //Modified to add switch to provide a handle to save objects
-  public static boolean saveObjects = true;
+  public static boolean saveObjects = false;
+  public static boolean saveObjectBtns = false;
   private Switch save_objects_stch;
   private String[] permissions = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
           Manifest.permission.CAMERA};
@@ -121,6 +123,7 @@ public abstract class CameraActivity extends AppCompatActivity
     gestureLayout = findViewById(R.id.gesture_layout);
     sheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
     bottomSheetArrowImageView = findViewById(R.id.bottom_sheet_arrow);
+    saveBtn = findViewById(R.id.saveBtn);
 
     //setting switch to handle save objects
     save_objects_stch = findViewById(R.id.save_objects_switch);
@@ -142,6 +145,13 @@ public abstract class CameraActivity extends AppCompatActivity
               }
             });
     sheetBehavior.setHideable(false);
+
+    saveBtn.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            saveObjectBtns = true;
+        }
+    });
 
     sheetBehavior.setBottomSheetCallback(
             new BottomSheetBehavior.BottomSheetCallback() {
