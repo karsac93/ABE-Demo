@@ -41,9 +41,16 @@ public class Msg implements Serializable {
     @ColumnInfo(name = "num_nodes")
     private int num_nodes_travelled;
 
+    @ColumnInfo(name = "first_hash")
+    private String first_hash;
+
+    @ColumnInfo(name = "enc_hash")
+    private String encrypted_hash;
+
     public Msg(@NonNull String id, @NonNull String source, String path, @NonNull String type,
                @NonNull String fileName, String cipher, String policy, String hashInfo,
-               int num_nodes_travelled, String nextHash, String connectedDevices, boolean isverified) {
+               int num_nodes_travelled, String nextHash, String connectedDevices, boolean isverified,
+               String first_hash, String encrypted_hash) {
         this.id = id;
         this.source = source;
         this.path = path;
@@ -56,6 +63,8 @@ public class Msg implements Serializable {
         this.nextHash = nextHash;
         this.connectedDevices = connectedDevices;
         this.isverified = isverified;
+        this.first_hash = first_hash;
+        this.encrypted_hash = encrypted_hash;
     }
 
     @ColumnInfo(name= "nextHash")
@@ -165,5 +174,21 @@ public class Msg implements Serializable {
 
     public void setIsverified(boolean isverified) {
         this.isverified = isverified;
+    }
+
+    public String getFirst_hash() {
+        return first_hash;
+    }
+
+    public void setFirst_hash(String first_hash) {
+        this.first_hash = first_hash;
+    }
+
+    public String getEncrypted_hash() {
+        return encrypted_hash;
+    }
+
+    public void setEncrypted_hash(String encrypted_hash) {
+        this.encrypted_hash = encrypted_hash;
     }
 }

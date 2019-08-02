@@ -34,7 +34,7 @@ import co.junwei.cpabe.Cpabe;
 public class MessageDetailActivity extends AppCompatActivity {
     ImageView imageView;
     TextView idtv, filenametv, sourceidtv, policytv, policy_show_tv,
-            nodes_travelled_tv, connected_devices_tv, isverified_tv, hashinfo_tv;
+            nodes_travelled_tv, connected_devices_tv, isverified_tv, hashinfo_tv, firstHash_tv;
     EditText policy;
     Button encryptbtn;
     AppDatabase database;
@@ -64,6 +64,7 @@ public class MessageDetailActivity extends AppCompatActivity {
         connected_devices_tv = findViewById(R.id.connected_devices_tv);
         isverified_tv = findViewById(R.id.isverified_tv);
         hashinfo_tv = findViewById(R.id.hashinfo_tv);
+        firstHash_tv = findViewById(R.id.first_hash);
 
         if(msg.getPath() == null) Glide.with(this).load(R.drawable.sample_image).into(imageView);
         else Glide.with(this).load(new File(msg.getPath())).into(imageView);
@@ -73,6 +74,9 @@ public class MessageDetailActivity extends AppCompatActivity {
         sourceidtv.setText("Source Id: " + msg.getSource());
         nodes_travelled_tv.setText("Nodes Travelled: " + msg.getNum_nodes_travelled());
         connected_devices_tv.setText("Nodes Connected Before:" + msg.getConnectedDevices());
+        if(msg.getFirst_hash() != null)
+            firstHash_tv.setText("First Hash (kn): " + msg.getFirst_hash());
+        else firstHash_tv.setVisibility(View.GONE);
 
         String policy_text = msg.getPolicy();
         if(policy_text == null || policy_text.length() == 0)
@@ -88,7 +92,9 @@ public class MessageDetailActivity extends AppCompatActivity {
             encryptbtn.setVisibility(View.GONE);
             policytv.setVisibility(View.GONE);
         }
-        else connected_devices_tv.setVisibility(View.GONE);
+        else {
+            connected_devices_tv.setVisibility(View.GONE);
+        }
 
         if(msg.getType().equals((Homescreen.RECEIVED))){
             isverified_tv.setVisibility(View.VISIBLE);
@@ -113,6 +119,12 @@ public class MessageDetailActivity extends AppCompatActivity {
                 Cpabe abeObj = new Cpabe();
                 byte[] cipher = abeObj.encModified(pub_byte, policyTags, imgPath);
                 String encoded = Base64.encodeToString(cipher, Base64.DEFAULT);
+
+                byte[] hashbytes = msg.getFirst_hash().getBytes(StandardCharsets.UTF_8);
+                byte[] hashcipher = abeObj.encHash(pub_byte, policyTags, hashbytes);
+                String hashStrcipher = Base64.encodeToString(hashcipher, Base64.DEFAULT);
+                msg.setEncrypted_hash(hashStrcipher);
+
                 byte[] encoded_cipher = encoded.getBytes(StandardCharsets.UTF_8);
                 Log.d(TAG, "Encoded cipher:" + cipher.length);
                 File encFile = SDFileHandler.createFile(msg.getId(), SetupActivity.CPH, encoded_cipher);

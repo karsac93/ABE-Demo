@@ -1,8 +1,11 @@
 package org.tensorflow.lite.examples.detection;
 
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
 
@@ -16,10 +19,12 @@ import java.util.Date;
 public class SaveRunnable implements Runnable {
     Bitmap bitmap;
     Rect location;
+    Context context;
     
-    public SaveRunnable(Bitmap bitmap, Rect location) {
+    public SaveRunnable(Bitmap bitmap, Rect location, Context context) {
         this.bitmap = bitmap;
         this.location = location;
+        this.context = context;
     }
 
     @Override
@@ -59,6 +64,7 @@ public class SaveRunnable implements Runnable {
                 objectBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
                 out.flush();
                 out.close();
+                context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(objectFile)));
             } catch (Exception e) {
                 e.printStackTrace();
             }

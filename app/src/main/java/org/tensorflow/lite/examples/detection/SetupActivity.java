@@ -7,12 +7,11 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
-import android.os.Environment;
+import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
@@ -24,29 +23,21 @@ import org.tensorflow.lite.examples.detection.SQLHandler.AppDatabase;
 import org.tensorflow.lite.examples.detection.SQLHandler.KeyChainHash;
 import org.tensorflow.lite.examples.detection.SharedPreferences.SharedPreferenceHandler;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.FileHandler;
-
-import co.junwei.bswabe.BswabePrv;
-import co.junwei.bswabe.BswabePub;
-import co.junwei.bswabe.SerializeUtils;
 
 public class SetupActivity extends AppCompatActivity {
     private Button setupBtn;
     private RadioGroup typeGrp;
     private RadioButton btn;
+    private EditText ipAddrText;
     public static final String STATUS = "setup", ID = "id";
     public static final String TYPE = "type", DS = "Disaster", AR = "Battlefield", IN = "IN";
 
-    public static final String IP = "10.106.41.137";
+    //public static final String IP = "10.106.41.137";
     private static final int ARPORT = 5001, DSPORT = 5002;
 
     private String[] permissions = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -72,6 +63,7 @@ public class SetupActivity extends AppCompatActivity {
         setupBtn = findViewById(R.id.setup);
         setupBtn.setEnabled(false);
         typeGrp = findViewById(R.id.radioGroup);
+        ipAddrText = findViewById(R.id.ipAddrText);
         Intent intent = new Intent(SetupActivity.this, Homescreen.class);
         if(SharedPreferenceHandler.getBooleanValue(this, STATUS) == true){
             startActivity(intent);
@@ -85,14 +77,19 @@ public class SetupActivity extends AppCompatActivity {
         }
 
         setupBtn.setOnClickListener(v -> {
+            String ipAddress = ipAddrText.getText().toString();
             int selectedId = typeGrp.getCheckedRadioButtonId();
             btn = findViewById(selectedId);
             if(btn.getText().toString().contains(DS)){
+                if(!validIP(ipAddress)){
+                    Toast.makeText(this, "Enter a valid IP address", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                     if(isNetworkAvailable()){
                         //connect to the internet
                         new Thread(() -> {
                             try {
-                                connectToInternet(DSPORT, DS, this, intent);
+                                connectToInternet(ipAddress, DSPORT, DS, this, intent);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             } catch (ClassNotFoundException e) {
@@ -105,12 +102,16 @@ public class SetupActivity extends AppCompatActivity {
                                 "Please connect to the internet!", Toast.LENGTH_SHORT).show();
             }
             else if(btn.getText().toString().contains(AR)){
+                if(!validIP(ipAddress)){
+                    Toast.makeText(this, "Enter a valid IP address", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 if(isNetworkAvailable()){
                     //connect to the internet
 
                         new Thread(() -> {
                             try {
-                                connectToInternet(ARPORT, AR, this, intent);
+                                connectToInternet(ipAddress, ARPORT, AR, this, intent);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             } catch (ClassNotFoundException e) {
@@ -132,9 +133,36 @@ public class SetupActivity extends AppCompatActivity {
         });
     }
 
-    private void connectToInternet(int port, String type, Context context, Intent intent) throws IOException, ClassNotFoundException {
+    public static boolean validIP (String ip) {
+        try {
+            if ( ip == null || ip.isEmpty() ) {
+                return false;
+            }
 
-        Socket socket = new Socket(IP, port);
+            String[] parts = ip.split( "\\." );
+            if ( parts.length != 4 ) {
+                return false;
+            }
+
+            for ( String s : parts ) {
+                int i = Integer.parseInt( s );
+                if ( (i < 0) || (i > 255) ) {
+                    return false;
+                }
+            }
+            if ( ip.endsWith(".") ) {
+                return false;
+            }
+
+            return true;
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+    }
+
+    private void connectToInternet(String ipAddress, int port, String type, Context context, Intent intent) throws IOException, ClassNotFoundException {
+
+        Socket socket = new Socket(ipAddress, port);
         ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
         MobileServerPOJO obj = (MobileServerPOJO) in.readObject();
 
@@ -142,11 +170,11 @@ public class SetupActivity extends AppCompatActivity {
         byte[] pub = obj.getPub();
         byte[] prv = obj.getPrv();
         String[] attr = obj.getAttr();
-        List<HashObject> ownHash = obj.getOwnHash();
-        List<HashObject> otherHash = obj.getOtherHash();
+//        List<HashObject> ownHash = obj.getOwnHash();
+//        List<HashObject> otherHash = obj.getOtherHash();
 
-        setHashes(ownHash, OWN);
-        setHashes(otherHash, OTHER);
+//        setHashes(ownHash, OWN);
+//        setHashes(otherHash, OTHER);
 
         String pubPath = SDFileHandler.createFile(PUB, "", pub).getAbsolutePath();
         String prvPath = SDFileHandler.createFile(PRV, "", prv).getAbsolutePath();
@@ -163,13 +191,13 @@ public class SetupActivity extends AppCompatActivity {
         finish();
     }
 
-    private void setHashes(List<HashObject> hashes, String hashType) {
-        for(HashObject obj: hashes){
-            KeyChainHash chainHash = new KeyChainHash(obj.getK5(), obj.getK0(), hashType);
-            database.dao().insertHash(chainHash);
-        }
-
-    }
+//    private void setHashes(List<HashObject> hashes, String hashType) {
+//        for(HashObject obj: hashes){
+//            KeyChainHash chainHash = new KeyChainHash(obj.getK5(), obj.getK0(), hashType);
+//            database.dao().insertHash(chainHash);
+//        }
+//
+//    }
 
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager

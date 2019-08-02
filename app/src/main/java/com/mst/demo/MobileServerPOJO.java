@@ -11,18 +11,26 @@ public class MobileServerPOJO implements Serializable{
 	final byte[] prv;
 	final String deviceID;
 	final String[] attr;
-	final List<HashObject> ownHash;
-	final List<HashObject> otherHash;
+//	final List<HashObject> ownHash;
+//	final List<HashObject> otherHash;
 	
-	public MobileServerPOJO(byte[] pub, byte[] prv, String deviceID, String[] attr, List<HashObject> ownHash,
-			List<HashObject> otherHash) {
-		super();
+//	public MobileServerPOJO(byte[] pub, byte[] prv, String deviceID, String[] attr, List<HashObject> ownHash,
+//			List<HashObject> otherHash) {
+//		super();
+//		this.pub = pub;
+//		this.prv = prv;
+//		this.deviceID = deviceID;
+//		this.attr = attr;
+//		this.ownHash = ownHash;
+//		this.otherHash = otherHash;
+//	}
+
+
+	public MobileServerPOJO(byte[] pub, byte[] prv, String deviceID, String[] attr) {
 		this.pub = pub;
 		this.prv = prv;
 		this.deviceID = deviceID;
 		this.attr = attr;
-		this.ownHash = ownHash;
-		this.otherHash = otherHash;
 	}
 
 	public byte[] getPub() {
@@ -41,13 +49,13 @@ public class MobileServerPOJO implements Serializable{
 		return attr;
 	}
 
-	public List<HashObject> getOwnHash() {
-		return ownHash;
-	}
-
-	public List<HashObject> getOtherHash() {
-		return otherHash;
-	}
+//	public List<HashObject> getOwnHash() {
+//		return ownHash;
+//	}
+//
+//	public List<HashObject> getOtherHash() {
+//		return otherHash;
+//	}
 	
 	
 	

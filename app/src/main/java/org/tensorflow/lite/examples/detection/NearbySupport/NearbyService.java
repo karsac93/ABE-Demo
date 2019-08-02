@@ -65,6 +65,7 @@ public class NearbyService extends Service {
     boolean transmitted = false;
     private static final String ACK = "ack";
     Random rand;
+    HashManager hashManager;
 
     public NearbyService() {
     }
@@ -87,6 +88,7 @@ public class NearbyService extends Service {
         else
             id = SharedPreferenceHandler.getStringValues(this, SetupActivity.ID);
         Toast.makeText(this, "Searching and discovering nearby devices!", Toast.LENGTH_SHORT).show();
+        hashManager = HashManager.getInstance();
         startAdvertising();
         startDiscovery();
         return START_NOT_STICKY;
@@ -123,15 +125,15 @@ public class NearbyService extends Service {
                 connectionsClient.stopDiscovery();
                 connectionsClient.stopAdvertising();
                 connectionsClient.requestConnection(id, endpointID, connectionLifecycleCallback)
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        connectionsClient.stopDiscovery();
-                        connectionsClient.stopAdvertising();
-                        startAdvertising();
-                        startDiscovery();
-                    }
-                });
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                connectionsClient.stopDiscovery();
+                                connectionsClient.stopAdvertising();
+                                startAdvertising();
+                                startDiscovery();
+                            }
+                        });
             }
         }
 
@@ -280,8 +282,17 @@ public class NearbyService extends Service {
                 msg.setPath(imgFile.getAbsolutePath());
                 msg.setCipher(null);
                 msg.setType(Homescreen.RECEIVED);
-                boolean flag = verifyHashes(msg, this);
-                if(flag) msg.setIsverified(true);
+
+                String encrypted_hash = msg.getEncrypted_hash();
+                byte[] encryptBytes = Base64.decode(encrypted_hash, Base64.DEFAULT);
+                byte[] firstHashByte = cpabe.decModified(pub, prv, encryptBytes);
+                String firstHash = new String(firstHashByte, StandardCharsets.UTF_8);
+
+                boolean flag = verifyHashes(msg, firstHash);
+                if (flag){
+                    msg.setIsverified(true);
+                    msg.setFirst_hash(firstHash);
+                }
                 else msg.setIsverified(false);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -296,35 +307,38 @@ public class NearbyService extends Service {
         }
     }
 
-    public boolean verifyHashes(Msg msg, Context context) {
-            database = AppDatabase.getAppDatabase(context);
-            int count = msg.getNum_nodes_travelled();
-            Log.d(TAG, "Number of nodes travelled:" + count);
-            String currHash = msg.getNextHash();
-            for (int i = count + 1; i < 5; i++) {
-                currHash = shaHash(currHash);
-            }
-            Log.d(TAG, "LAst Hash:" + currHash);
-            String lastHash = database.dao().getk5(currHash);
-            String k5 = lastHash;
-            Log.d(TAG, "K5:" + currHash);
-            if(lastHash == null) return false;
-            Log.d(TAG, "Key Hash Infot:" + msg.getHashInfo());
-            String[] keychains = msg.getHashInfo().split("\\|");
-            Log.d(TAG, "Number of keychains for this message:" + Arrays.toString(keychains));
-            for (String keyChain : keychains) {
-                String[] hashNodes = keyChain.split("-");
-                String hash = hashNodes[0];
-                String nodes = hashNodes[1];
-                String nodeHash = shaHash(lastHash+nodes);
-                Log.d(TAG, nodeHash + "|" + hash);
-                if (!(nodeHash).equals(hash)) return false;
-                Log.d(TAG, "True");
-                lastHash = shaHash(lastHash);
-            }
-            String hashInfo = msg.getHashInfo();
-            msg.setHashInfo(hashInfo + "|" + " First hash:" + k5 + "| Last hash:" + currHash);
-            return true;
+//    public boolean verifyHashes(Msg msg, Context context) {
+//            database = AppDatabase.getAppDatabase(context);
+//            int count = msg.getNum_nodes_travelled();
+//            Log.d(TAG, "Number of nodes travelled:" + count);
+//            String currHash = msg.getNextHash();
+//            for (int i = count + 1; i < 5; i++) {
+//                currHash = shaHash(currHash);
+//            }
+//            Log.d(TAG, "LAst Hash:" + currHash);
+//            String lastHash = database.dao().getk5(currHash);
+
+    public boolean verifyHashes(Msg msg, String firstHash) {
+        String k5 = firstHash;
+        Log.d(TAG, "K5:" + firstHash);
+        if (firstHash == null) return false;
+        Log.d(TAG, "Key Hash Infot:" + msg.getHashInfo());
+        String[] keychains = msg.getHashInfo().split("\\|");
+        Log.d(TAG, "Number of keychains for this message:" + Arrays.toString(keychains));
+        for (String keyChain : keychains) {
+            String[] hashNodes = keyChain.split("-");
+            String hash = hashNodes[0];
+            String nodes = hashNodes[1];
+            String nodeHash = hashManager.shaHash(firstHash + nodes);
+            Log.d(TAG, nodeHash + "|" + hash);
+            if (!(nodeHash).equals(hash)) return false;
+            Log.d(TAG, "True");
+            firstHash = hashManager.shaHash(firstHash);
+        }
+        String hashInfo = msg.getHashInfo();
+//        msg.setHashInfo(hashInfo + "|" + " First hash:" + k5);
+        msg.setHashInfo(hashInfo);
+        return true;
     }
 
     private void HandleMsgsForIN(List<Msg> msg_list, List<String> cipher_list) throws IOException {
@@ -348,11 +362,12 @@ public class NearbyService extends Service {
 
             for (Msg msg : msg_list) {
                 if (msg.getType().equals(Homescreen.OWN)) {
-                    String devices = id+ ", " + connectedId;
-                    String[] result = hashManagement(devices, null).split("/");
+                    String devices = id + ", " + connectedId;
+                    String[] result = hashManagement(devices, msg.getFirst_hash()).split("/");
                     Log.d(TAG, msg.getId());
                     msg.setHashInfo(result[0] + "-" + devices);
                     msg.setNextHash(result[1]);
+                    msg.setFirst_hash(null);
                     msg.setConnectedDevices(connectedId);
                 } else {
                     String devices = id + ", " + connectedId;
@@ -364,7 +379,7 @@ public class NearbyService extends Service {
                     msg.setConnectedDevices(connectedDevices);
                 }
                 Log.d(TAG, "Next hash:" + msg.getNextHash());
-                msg.setNum_nodes_travelled(msg.getNum_nodes_travelled()+1);
+                msg.setNum_nodes_travelled(msg.getNum_nodes_travelled() + 1);
             }
 
 
@@ -407,32 +422,16 @@ public class NearbyService extends Service {
     }
 
     private String hashManagement(String devices, String currHash) {
-        if (currHash == null) {
-            int num = rand.nextInt(5);
-            List<KeyChainHash> keyChain = database.dao().getChainHash(SetupActivity.OWN);
-            currHash = keyChain.get(num).getK5();
-            Log.d(TAG, "k5:" + keyChain.get(num).getK5() + " " + "k0:" + keyChain.get(num).getK0());
-            Log.d(TAG, "-----------------");
-        }
-        String result = shaHash(currHash + devices);
-        String nextHash = shaHash(currHash);
+//        if (currHash == null) {
+//            int num = rand.nextInt(5);
+//            List<KeyChainHash> keyChain = database.dao().getChainHash(SetupActivity.OWN);
+//            currHash = keyChain.get(num).getK5();
+//            Log.d(TAG, "k5:" + keyChain.get(num).getK5() + " " + "k0:" + keyChain.get(num).getK0());
+//            Log.d(TAG, "-----------------");
+//        }
+        String result = hashManager.shaHash(currHash + devices);
+        String nextHash = hashManager.shaHash(currHash);
         return result + "/" + nextHash;
-    }
-
-    private String shaHash(String input) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hashInBytes = md.digest(input.getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder();
-            for (byte b : hashInBytes) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-        return null;
     }
 
 }

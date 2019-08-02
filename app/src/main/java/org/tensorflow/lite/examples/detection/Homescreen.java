@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.tensorflow.lite.examples.detection.Messages.MessagesActivity;
+import org.tensorflow.lite.examples.detection.NearbySupport.HashManager;
 import org.tensorflow.lite.examples.detection.NearbySupport.NearbyService;
 import org.tensorflow.lite.examples.detection.SharedPreferences.SharedPreferenceHandler;
 
@@ -34,6 +35,7 @@ public class Homescreen extends AppCompatActivity {
     private static final String TAG = Homescreen.class.getCanonicalName();
     String id;
     AppDatabase database;
+    HashManager hashManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +54,8 @@ public class Homescreen extends AppCompatActivity {
         id = SharedPreferenceHandler.getStringValues(this, SetupActivity.ID);
         Log.d(TAG, id);
         idview.setText("ID: " + id);
+
+        hashManager = HashManager.getInstance();
 
         String node_type = SharedPreferenceHandler.getStringValues(this, SetupActivity.TYPE);
         if(node_type.equals(SetupActivity.IN)){
@@ -110,8 +114,10 @@ public class Homescreen extends AppCompatActivity {
             String source = String.valueOf(id);
             String fileName = file.getName();
             String type = OWN;
+            String randomvalue = hashManager.generateKey();
+            String firsthash = hashManager.shaHash(randomvalue);
             Msg msg = new Msg(msg_id, source, path, type, fileName, null, null,
-                    null, 0, null, id, true);
+                    null, 0, null, id, true, firsthash, null);
             database.dao().insertMsg(msg);
             Toast.makeText(this, "File Created Successfully! See in messages!", Toast.LENGTH_SHORT).show();
         }
