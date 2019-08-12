@@ -230,6 +230,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                       Log.d(DetectorActivity.class.getCanonicalName(), coor.left + " " + coor.top + " " +
                               coor.width() + " " + coor.height() + " " + croppedBitmap.getWidth() + " " + croppedBitmap.getHeight());
                       Log.d(DetectorActivity.class.getCanonicalName(), "User decided to save the object");
+                      Toast.makeText(DetectorActivity.this, "Object has been saved!", Toast.LENGTH_SHORT).show();
                       Runnable saveRunnable = new SaveRunnable(croppedBitmap, coor, getApplicationContext());
                       Thread thread = new Thread(saveRunnable);
                       thread.start();

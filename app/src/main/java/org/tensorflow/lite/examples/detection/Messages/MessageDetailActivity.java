@@ -131,6 +131,8 @@ public class MessageDetailActivity extends AppCompatActivity {
                 msg.setCipher(encFile.getAbsolutePath());
                 msg.setPolicy(policyTags);
                 database.dao().insertMsg(msg);
+                encryptbtn.setEnabled(false);
+                Toast.makeText(this, "Image has been encrypted!", Toast.LENGTH_SHORT).show();
             } catch (Exception e) {
                 e.printStackTrace();
                 Toast.makeText(this, "Enter valid keys that is present in Master Key Generator!",
